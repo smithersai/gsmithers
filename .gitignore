@@ -29,5 +29,8 @@ extension/.auth.json
 !.env.example
 supabase/.temp/
 
+# Smithers workflow run artifacts
+executions/
+
 # Throughput analysis — local-only, regenerate via scripts/garry-output-comparison.ts
 docs/throughput-*.json

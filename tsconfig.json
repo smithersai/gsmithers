@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "jsxImportSource": "smithers-orchestrator",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "./prompts/**/*",
+    "./workflows/**/*",
+    "./components/**/*",
+    "./lib/smithers/**/*",
+    "./examples/**/*",
+    "./agents.ts",
+    "./smithers.config.ts"
+  ],
+  "exclude": [
+    "./executions/**/*",
+    "./node_modules/**/*"
+  ]
+}
