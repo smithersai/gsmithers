@@ -1,0 +1,38 @@
+# /setup-deploy — Confirm Detected Deploy
+
+Detection run completed. Emit the confirmation row using the detected values
+verbatim — do NOT invent a command or URLs the detector didn't find.
+
+## What was detected
+
+- Deploy platform (best guess): **{props.detected.platform ?? "unknown"}**
+- Deploy command: `{props.detected.command ?? "(none detected)"}`
+- Staging URL: **{props.detected.stagingUrl ?? "(none)"}**
+- Production URL: **{props.detected.productionUrl ?? "(none)"}**
+- Detection confidence: **{props.detected.confidence}** (0–10)
+
+## Evidence
+
+{props.detected.evidence.map((e) => `- ${e}`).join("\n")}
+
+## Output contract
+
+- `confirmedPlatform`: the detected platform verbatim, or `"unknown"` if none
+- `confirmedCommand`: the detected command verbatim, or `""` if none
+- `confirmedStagingUrl`: detector's value or null
+- `confirmedProductionUrl`: detector's value or null
+- `userOverrode`: always `false` — this Task never overrides the detector
+
+## Why there's no correction path
+
+smithers' `needsApproval` gate is a binary approve/deny; it is NOT a
+data-entry primitive. Capturing corrected values requires a different shape
+— either a `Signal` fired by the user with the corrected payload, or a
+follow-up run.
+
+The workflow pauses here via `needsApproval` when detection confidence is
+low. Approving resumes with detection-as-is. If the user needs different
+values, they deny the approval, manually edit `~/.gstack/config.yaml`, and
+re-run `/setup-deploy`. That's the contract this Task exposes.
+
+Return the confirmation row exactly as specified above.

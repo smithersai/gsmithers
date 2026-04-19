@@ -1,0 +1,40 @@
+# /gstack-upgrade — Post-Upgrade Summary
+
+gstack was just upgraded. Summarize what changed and what the user can now do.
+
+## Inputs
+
+- Previous version: **{props.previousVersion}**
+- New version: **{props.newVersion}**
+- Install location: **{props.installPath}**
+- Migrations applied: **{props.migrationsRun.length}**
+- Local changes stashed before upgrade: **{props.stashed ? `yes (ref: ${props.stashMessage ?? "unnamed"})` : "no"}**
+
+{props.stashed
+  ? `> ⚠️ You had local changes in the install checkout. They were stashed as \`${props.stashMessage}\`. Run \`cd ${props.installPath} && git stash list\` to see them, and \`git stash pop\` (or \`git stash apply\`) to restore.`
+  : ""}
+
+{props.migrationsRun.length > 0
+  ? `Migrations run this upgrade:\n\n${props.migrationsRun.map((m) => `- \`${m}\``).join("\n")}`
+  : "(no migrations needed for this upgrade)"}
+
+**CHANGELOG entries between versions:**
+
+```
+{props.changelogDelta}
+```
+
+## What to produce
+
+A 2-paragraph summary:
+
+1. **What's new** — translate the CHANGELOG into plain English. Lead with the
+   most user-visible changes. Not "refactored the preamble resolver" — "every
+   skill now shows you which repo and branch you're on before it starts."
+2. **What the user should try** — 2-3 specific things to do next. "Run
+   `/retro 14d` and notice the new per-author leaderboard" is better than
+   "try the new retro features."
+
+Return `{ summary: "...", tryNext: ["...", "..."] }`.
+
+Do not apologize. Do not list every line of the diff. Pick what matters.

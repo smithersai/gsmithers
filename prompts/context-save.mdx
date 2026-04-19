@@ -1,0 +1,50 @@
+# /context-save — Save Session Context
+
+Capture the current working session into a file so it can be restored later
+(by you or another agent, later today, tomorrow, or weeks from now).
+
+## Current state
+
+- Branch: **{props.state.branch}**
+- Dirty working tree: **{props.state.dirty ? "yes" : "no"}**
+- Commits since base: **{props.state.commitsAhead}**
+- Last commit: **{props.state.lastCommit ?? "(none)"}**
+- Saved contexts for this project: **{props.state.savedCount}**
+- Session duration: **{Math.round(props.sessionMinutes)} minutes**
+
+## User's title (if given)
+
+> {props.title ?? "(no title — infer one from the state)"}
+
+## What to produce
+
+A markdown context-save document with this exact structure:
+
+```
+## Working on: <concise title — what the user is shipping>
+
+### Summary
+<2-4 sentences: what's being built, what's done, what's in progress>
+
+### Decisions Made
+- <decision 1 with rationale>
+- <decision 2 with rationale>
+
+### Remaining Work
+- [ ] <concrete task>
+- [ ] <concrete task>
+
+### Notes
+<anything the next agent needs to know that isn't in git — design intent,
+discarded approaches, stakeholder context>
+```
+
+Keep it tight — this is a handoff note, not a design doc. The next session
+should be able to read it in 30 seconds and know where to pick up.
+
+## Save location
+
+Write to: `~/.gstack/projects/{props.slug}/context-{timestamp}.md`
+where `{timestamp}` is `YYYY-MM-DD-HHMMSS` local time.
+
+Return `{ path: "<full path>", title: "<title used>" }`.

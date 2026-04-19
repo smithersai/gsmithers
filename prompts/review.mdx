@@ -1,0 +1,62 @@
+# Pre-Landing PR Review
+
+Analyze the branch's diff against the base branch (**{props.baseBranch}**) for
+structural issues that tests don't catch.
+
+## Diff summary
+
+- Files changed: **{props.diffSummary.filesChanged}**
+- Insertions: **+{props.diffSummary.insertions}**
+- Deletions: **-{props.diffSummary.deletions}**
+- Base: `origin/{props.baseBranch}` · Head: `{props.diffSummary.headSha.slice(0, 10)}`
+
+## Files
+
+{props.diffSummary.files.map((f) => `- \`${f.path}\` (+${f.additions}/-${f.deletions}) [${f.status}]`).join("\n")}
+
+Statuses: `modified` = committed vs base branch, `uncommitted` = staged/unstaged
+working-tree changes, `untracked` = new files not yet in git. Review all three
+categories — the user wants you to catch issues in work-in-progress, not just
+what's already committed.
+
+## Full diff
+
+```diff
+{props.diffSummary.patch}
+```
+
+## What to look for (structural issues tests don't catch)
+
+1. **SQL safety** — raw string concat, unbounded LIMITs, missing indexes on new
+   WHEREs, N+1 query patterns, transaction boundaries
+2. **LLM trust boundary violations** — raw user input concatenated into prompts,
+   agent outputs used as trusted data without validation, prompt-injection
+   vectors in any user-facing text rendered to an LLM
+3. **Conditional side effects** — `if (x) deleteFile()`, early-return after
+   partial state mutation, try/catch that swallows and continues
+4. **Timing + ordering** — await-in-loop that should parallelize, fire-and-forget
+   promises, unflushed writes before process exit
+5. **Error handling smells** — catch-all exception handlers, error messages that
+   leak internals, missing error paths
+6. **Observability gaps** — new code paths without logs/metrics, removed logs
+7. **Security** — secrets in diff, new auth decisions, trust-boundary changes
+8. **Backwards compatibility** — breaking API changes, removed public exports,
+   schema migrations without back-compat
+
+## What to produce
+
+For each structural issue found:
+
+- `severity`: `critical` / `major` / `minor` / `nit`
+- `category`: one of the buckets above
+- `location`: `path/to/file.ts:LINE` (use the line from the new file side)
+- `rationale`: why this is a risk, anchored in the diff
+- `recommendation`: concrete fix — not "handle errors better" but "wrap in
+  try/catch that rethrows EPERM and swallows ENOENT"
+- `proposedEdit`: optional — the exact replacement text if it's a small change
+
+Include `openQuestions` for anything where the author's intent matters and
+isn't obvious from the diff.
+
+Return the full ReviewOutput. Verdict: `ship` (no blockers), `ship_with_changes`
+(minor/nit only), `revise_substantially` (majors present), `hold` (criticals).

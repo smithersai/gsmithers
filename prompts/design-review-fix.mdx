@@ -1,0 +1,28 @@
+# /design-review — Apply Visual Fixes
+
+The audit flagged {props.findings.length} design issues. Apply fixes to the
+source (CSS / component markup / design tokens), commit each atomically, then
+return for re-audit.
+
+## Findings
+
+```json
+{JSON.stringify(props.findings, null, 2)}
+```
+
+## Rules
+
+1. One fix per commit. Commit message: `fix(design): <one-line>`.
+2. Respect existing design tokens. If a fix needs a new color / spacing value,
+   flag it as an `openQuestion` instead of introducing a one-off.
+3. Don't fix the same element twice in a row — if a previous iteration touched
+   it and the issue persists, it's a deeper problem. Flag as `openQuestion`.
+4. Skip issues at severity `nit` unless the caller passed `tier=exhaustive`.
+
+## What to produce
+
+`DesignFixResult`:
+- `fixesApplied`: `{ findingId, commitSha, filesChanged }[]`
+- `fixesSkipped`: `{ findingId, reason }[]`
+- `openQuestions`: things that need human judgment
+- `ready_to_reverify`: boolean

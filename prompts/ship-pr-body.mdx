@@ -1,0 +1,55 @@
+# /ship — PR Body
+
+Write a PR body for the changes on this branch.
+
+## Context
+
+- Branch: **{props.preflight.currentBranch}** → **{props.preflight.baseBranch}**
+- Files changed: **{props.preflight.diff.filesChanged}**
+- LOC: +{props.preflight.diff.insertions} / -{props.preflight.diff.deletions}
+
+**Commits on this branch (in order):**
+
+{props.commits.map((c) => `- ${c.hash.slice(0, 10)} ${c.subject}`).join("\n")}
+
+**Review output (pre-landing):**
+
+- Verdict: **{props.review.verdict}**
+- Findings: **{props.review.findings.length}** ({props.review.findings.filter((f) => f.severity === "critical" || f.severity === "major").length} blocking)
+- Summary: {props.review.summary}
+
+**CHANGELOG entry drafted for this branch:**
+
+```
+{props.changelogEntry}
+```
+
+## Output format
+
+Use this exact structure:
+
+```
+## Summary
+
+<1-3 bullets. Lead with what the user can now do. Plain language. No
+implementation details.>
+
+## Test plan
+
+<Bulleted markdown checklist of TODOs for testing the PR. Concrete steps the
+reviewer can actually run.>
+
+## Review notes
+
+<If there were major/critical findings, list them with their resolution.
+Otherwise omit this section.>
+```
+
+## Rules
+
+- No emojis unless the user has them elsewhere in this repo (check CHANGELOG for
+  precedent).
+- Keep summary terse. If it takes more than 3 bullets, the PR should probably
+  be split.
+- Do NOT include "Generated with Claude Code" trailers or Co-Authored-By lines
+  — those go in commit messages, not PR bodies.

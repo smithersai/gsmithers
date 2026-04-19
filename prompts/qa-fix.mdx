@@ -1,0 +1,37 @@
+# /qa — Fix Iteration
+
+The QA pass found {props.findings.length} issues. Apply fixes based on the tier
+policy, commit each fix atomically, then return control so the next test
+iteration can verify.
+
+## Tier: **{props.tier}**
+
+Fix rules by tier:
+- **quick** — fix `critical` and `major` only; leave others to follow-up
+- **standard** — fix `critical`, `major`, `minor`; leave `nit` alone
+- **exhaustive** — fix everything
+
+## Findings (prioritized)
+
+```json
+{JSON.stringify(props.findings, null, 2)}
+```
+
+## Rules
+
+1. One fix per commit. Commit message format: `fix(<scope>): <one-line>` where
+   scope maps to the issue category.
+2. Don't fix out-of-scope items. Every commit must trace back to a finding.
+3. If a fix changes public API / types / behavior, add a test. No test → no fix.
+4. If a fix is ambiguous (multiple valid interpretations of the issue), flag it
+   as `openQuestion` instead of fixing.
+
+## What to produce
+
+`QaFixResult`:
+- `fixesApplied`: list of `{ findingId, commitSha, filesChanged }`
+- `fixesSkipped`: list of `{ findingId, reason }`
+- `openQuestions`: anything that needed a human call
+- `ready_to_retest`: boolean — true if the workflow can proceed to verify
+
+Do NOT re-run QA here — that's the next Loop iteration.

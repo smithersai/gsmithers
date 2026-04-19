@@ -1,0 +1,38 @@
+# /cso — Synthesize Security Report
+
+OWASP and STRIDE audits ran in parallel. Merge findings into a single
+security report.
+
+## OWASP findings
+
+{props.owasp
+  ? `${props.owasp.findings.length} total findings (verdict: ${props.owasp.verdict}).`
+  : "**(FAILED — OWASP pass did not run)**"}
+
+## STRIDE findings
+
+{props.stride
+  ? `${props.stride.findings.length} total findings (verdict: ${props.stride.verdict}).`
+  : "**(FAILED — STRIDE pass did not run)**"}
+
+## Full audits
+
+```json
+{JSON.stringify({ owasp: props.owasp, stride: props.stride }, null, 2)}
+```
+
+## Your job
+
+1. **De-duplicate** — OWASP and STRIDE often flag the same underlying issue
+   from different angles. Merge into one finding with both tags.
+2. **Rank** by severity (`critical` first) then by exploitability.
+3. **Write an executive summary** — 3 sentences. A security-conscious PM or
+   eng lead should be able to read it and know whether to ship or hold.
+4. **Pick the verdict.** Any `critical` → `hold`. Any `major` → `revise_substantially`.
+   Only `minor`/`nit` → `ship_with_changes`. Empty → `ship`.
+
+Return merged `ReviewOutput` with:
+- `summary`: 3-sentence executive summary
+- `findings`: merged + deduped list, sorted by severity
+- `openQuestions`: things a human security review needs to decide
+- `verdict`: one of `ship` / `ship_with_changes` / `revise_substantially` / `hold`

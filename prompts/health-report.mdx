@@ -1,0 +1,47 @@
+# /health — Repo Health Report
+
+Turn the raw checks into a health report a human can act on.
+
+## Raw checks
+
+```json
+{JSON.stringify(props.checks, null, 2)}
+```
+
+## Interpretation
+
+For each check, classify:
+
+- **Green** — healthy, no action needed
+- **Yellow** — watch this; not blocking but worth fixing soon
+- **Red** — actionable problem; file a TODO
+
+Specific rules:
+- Test count trending down → yellow (unless explained by deletions)
+- Test ratio (test LOC / total LOC) < 10% → yellow
+- Test ratio < 5% → red
+- Dependency count growing fast (>5/week) → yellow
+- Any dependency with known CVE (via `{props.checks.auditSummary}`) → red
+- Main branch CI red for >24h → red
+- Open PR count > 20 → yellow
+- Open issues with `P0` / `critical` labels → red (list them)
+- TODOS.md with unclassified items (no `P0`/`P1`/`P2`) → yellow
+- Number of unique authors in the last 30d = 1 and repo claims to be team
+  mode → yellow (bus factor)
+
+## Output
+
+```json
+{
+  "status": "green" | "yellow" | "red",
+  "summary": "<one sentence overall state>",
+  "greens": ["<check name>", ...],
+  "yellows": [{ "check": "<name>", "note": "<sentence>" }, ...],
+  "reds": [{ "check": "<name>", "note": "<sentence>", "actionable": "<what to do>" }, ...],
+  "topThree": ["<action 1>", "<action 2>", "<action 3>"]
+}
+```
+
+`topThree`: the three highest-leverage fixes given the current state. If the
+repo is all green, top three can be "nothing right now" type items or
+improvements to consider.

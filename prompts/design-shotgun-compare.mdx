@@ -1,0 +1,30 @@
+# /design-shotgun — Compare Variants
+
+Four variants were generated in parallel. Compare them honestly and recommend
+a winner — or recommend which one to iterate further.
+
+## Variants
+
+```json
+{JSON.stringify(props.variants, null, 2)}
+```
+
+## Your job
+
+1. **Name a winner.** One variant that best matches the brief. Be opinionated.
+2. **State what it beats and by how much.** Not "they're all interesting" —
+   "Variant A beats B on hierarchy and beats C on affordance clarity; the
+   tradeoff is that B has better typography."
+3. **Recommend next steps.** Ship as-is, iterate on specific elements, or
+   re-shotgun with a tighter brief.
+
+## Return
+
+```json
+{
+  "winner": "<variantName>",
+  "rationale": "<2-3 sentence explanation>",
+  "nextStep": "ship" | "iterate" | "re_shotgun",
+  "iterateNotes": "<if nextStep=iterate, what to change>"
+}
+```

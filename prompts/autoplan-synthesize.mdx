@@ -1,0 +1,69 @@
+# /autoplan — Synthesize Four Reviews
+
+Four reviewers ran in parallel over the same plan. Any reviewer may be missing
+(the task failed with `continueOnFail` — synthesize from survivors).
+
+## Inputs
+
+**Plan source:** {props.planSource}
+
+**Review verdicts (may be null if the reviewer failed):**
+
+| Reviewer | Verdict | Findings | Open questions |
+|---|---|---|---|
+| CEO | {props.ceo?.verdict ?? "(FAILED)"} | {props.ceo?.findings.length ?? 0} | {props.ceo?.openQuestions.length ?? 0} |
+| Eng | {props.eng?.verdict ?? "(FAILED)"} | {props.eng?.findings.length ?? 0} | {props.eng?.openQuestions.length ?? 0} |
+| Design | {props.design?.verdict ?? "(FAILED)"} | {props.design?.findings.length ?? 0} | {props.design?.openQuestions.length ?? 0} |
+| DX | {props.devex?.verdict ?? "(FAILED)"} | {props.devex?.findings.length ?? 0} | {props.devex?.openQuestions.length ?? 0} |
+
+**All findings (pooled, nulls = reviewer failed):**
+
+```json
+{JSON.stringify({ ceo: props.ceo, eng: props.eng, design: props.design, devex: props.devex }, null, 2)}
+```
+
+## Six Decision Principles
+
+When reviewers disagree or scope questions arise, auto-decide using these:
+
+1. **Shippability before ambition** — an unshippable perfect plan beats a
+   shippable mediocre plan, but a shippable 85% plan beats an unshippable 100%
+   plan. When in doubt, pick the version that lands.
+2. **Smaller surface area when safe** — fewer new public APIs, fewer new
+   concepts introduced, unless a reviewer explicitly argues the bigger surface
+   pays for itself.
+3. **Reversible > irreversible** — choose the path that can be rolled back.
+4. **Test-first when test-shaped** — if a reviewer recommends "add tests here"
+   and the scope supports it, auto-accept.
+5. **Preserve voice** — if a reviewer's note is about tone / voice / framing
+   and it conflicts with the plan's stated voice, keep the plan's voice.
+6. **Surface taste decisions** — if reviewers disagree about a real trade-off
+   (scope expansion, architectural direction, performance vs simplicity), do
+   **not** auto-decide. Add to `needsUserApproval`.
+
+## Handling missing reviewers
+
+If any reviewer is null/missing:
+
+- Explicitly list which reviewer failed in the summary ("Design review failed
+  to run — synthesis includes only CEO, Eng, DX findings").
+- Do NOT guess what the missing reviewer would have said.
+- If the failed reviewer is the one most relevant to the plan (e.g., DX
+  review failed on a developer-tools plan), downgrade the verdict one step
+  ("ship" → "ship_with_changes") and add an `openQuestion` noting the gap.
+
+## What to produce
+
+- `unifiedVerdict`: rollup of the surviving verdicts. Rules:
+  - Any `hold` → `hold`
+  - Any `revise_substantially` → `revise_substantially`
+  - Else any `ship_with_changes` → `ship_with_changes`
+  - Else `ship`
+- `autoAppliedFixes`: findings where severity ≤ major AND the recommendation
+  is unambiguous (not a taste call).
+- `needsUserApproval`: findings or choices that require human judgment. Each
+  entry: `finding`, `reviewers` (list of which reviewers raised it), `framing`.
+- `summary`: 3-5 sentence rollup of what's strong, what's weak, and what the
+  user needs to decide. **If any reviewer failed, mention it explicitly.**
+
+Return the full AutoplanDecision.

@@ -1,0 +1,19 @@
+## Browse binary
+
+Find the `browse` binary — used for headless browser automation (Playwright-backed).
+
+```bash
+B=""
+for candidate in \
+  "./browse/dist/browse" \
+  "./node_modules/.bin/browse" \
+  "$HOME/.claude/skills/gstack/browse/dist/browse" \
+  "$(which browse 2>/dev/null)"; do
+  if [ -x "$candidate" ]; then B="$candidate"; break; fi
+done
+[ -z "$B" ] && { echo "browse binary not found — run bun run build in the gstack dir"; exit 1; }
+export B
+```
+
+After this runs, use `$B <command>` for every browser operation. Never fall back
+to `mcp__claude-in-chrome__*` — gstack uses its own browser CLI.

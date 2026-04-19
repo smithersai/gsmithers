@@ -1,0 +1,40 @@
+# /cso — STRIDE Threat Model
+
+Threat-model the branch diff using STRIDE. Focus on *changes to trust
+boundaries and data flows*, not every line of the diff.
+
+## Diff under audit
+
+Files changed: {props.diff.filesChanged}
+
+```diff
+{props.diff.patch}
+```
+
+## STRIDE categories
+
+For each category, ask the specific question:
+
+1. **Spoofing** — can an attacker pretend to be someone else? New auth
+   surfaces? Removed identity checks?
+2. **Tampering** — can data in transit or at rest be modified? New unsigned
+   channels? Unsafe deserialization?
+3. **Repudiation** — can an actor deny taking an action? Missing audit logs?
+   Logs that can be edited by the actor logged?
+4. **Information Disclosure** — can data leak to unauthorized viewers? Error
+   messages exposing stack traces? Unexpected response fields? URL param
+   reflection?
+5. **Denial of Service** — can resources be exhausted? Unbounded loops,
+   unpaginated queries, missing rate limits?
+6. **Elevation of Privilege** — can a low-privilege actor become a
+   high-privilege actor? Missing authz checks? Overly broad scopes?
+
+## Rules
+
+- One finding per concrete risk. "Spoofing — new endpoint accepts userId from
+  query param without session check" — not "spoofing is a concern."
+- Tie every finding to a specific file:line in the diff.
+- If a category has nothing, say so explicitly (zero findings in that
+  category) — don't pad.
+
+Return `ReviewOutput` with findings tagged by STRIDE category.

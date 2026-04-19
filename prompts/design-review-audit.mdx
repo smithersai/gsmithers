@@ -1,0 +1,37 @@
+# /design-review — Visual Audit (iteration {props.iteration})
+
+Audit the live site at **{props.targetUrl}** for visual and interaction design
+issues. Previous iteration: {props.previousFindings.length > 0 ? `${props.previousFindings.length} issues flagged` : "first pass"}.
+
+## Design dimensions
+
+For each dimension, identify issues with severity + rationale + recommendation:
+
+1. **Hierarchy** — what does the eye go to first? Is that the right thing?
+2. **Affordance clarity** — clickable things look clickable; non-clickable things don't
+3. **Spacing + rhythm** — consistent scale; nothing cramped, nothing adrift
+4. **Typography** — hierarchy (H1→H2→body), line length, line height
+5. **Color** — contrast (WCAG AA minimum), semantic consistency, palette discipline
+6. **States** — empty, loading, error, success — all present and polished?
+7. **Motion + feedback** — actions confirm; progress signals present
+8. **Responsive** — mobile, tablet, desktop; no desktop-only patterns broken on mobile
+9. **Accessibility** — keyboard flow, focus visible, screen reader labels, prefers-reduced-motion
+
+{props.previousFindings.length > 0
+  ? `## Regressions to verify\n\nThe previous iteration flagged these. Confirm each is fixed:\n\n${props.previousFindings.map((f) => `- ${f.severity.toUpperCase()}: ${f.title} at ${f.location ?? "no location"}`).join("\n")}`
+  : ""}
+
+## Rules
+
+- Anchor every finding in a screenshot path or selector — no vague "this area
+  feels off."
+- Severity: `critical` = breaks the feature; `major` = noticeable regression;
+  `minor` = polish gap; `nit` = pixel nitpick.
+- Recommendation must be specific: not "improve spacing" but "increase
+  padding-top from 8px to 16px on the card body."
+
+Return `DesignAuditReport`:
+- `findings`: with severity, dimension, location, rationale, recommendation
+- `regressionsFromPrevious`: items still present
+- `allClear`: true only if zero new findings AND zero regressions
+- `summary`: 2-3 sentence rollup

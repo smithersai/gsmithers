@@ -1,0 +1,63 @@
+# Office Hours — Design Doc
+
+Write a design document capturing the outcome of the office hours session.
+
+## Inputs
+
+**Mode:** {props.mode}
+{props.stage ? `**Stage:** ${props.stage}` : ""}
+
+**User's original request:**
+> {props.userRequest}
+
+**Diagnostic / brainstorm output:**
+
+```json
+{JSON.stringify(props.diagnostic, null, 2)}
+```
+
+**Repo context:**
+- Repo: {props.context.repoName}
+- Recent commits: {props.context.recentCommits}
+
+## Output format
+
+Write a markdown design document with these sections:
+
+### 1. Problem
+
+What we're trying to solve. One paragraph. Specific, not abstract.
+
+### 2. {props.mode === "startup" ? "Demand Evidence" : "Why This Is Interesting"}
+
+{props.mode === "startup"
+  ? "What we know about whether real users want this. Anchor in specifics from the diagnostic. Flag gaps — what evidence is still missing."
+  : "Why this is worth building. The kernel. The surprise."}
+
+### 3. {props.mode === "startup" ? "The Wedge" : "Minimum Demo"}
+
+{props.mode === "startup"
+  ? "The narrowest version that earns revenue this week. Not the platform."
+  : "The 60-second demo shape. What you'd show a friend first."}
+
+### 4. {props.mode === "startup" ? "Biggest Risk" : "Hardest Part"}
+
+The single assumption most likely to kill this, and what would prove it right or
+wrong.
+
+### 5. Next Actions
+
+{props.mode === "startup"
+  ? "One concrete action. Not a strategy — something the founder will do this week. From the assignment field of the diagnostic."
+  : "The first-session plan — 3-5 concrete steps for the next ~2 hours of work."}
+
+### 6. Open Questions
+
+Things we haven't resolved yet. Keep this honest — a design doc with no open
+questions is a design doc that hasn't thought hard enough.
+
+## Rules
+
+- Do NOT invoke any implementation skill. Do NOT write code. Design doc only.
+- Save the doc to `~/.gstack/projects/{props.slug}/{new Date().toISOString().slice(0, 10)}-design-{props.mode}.md`.
+- After saving, return `{ path: "<saved path>", summary: "<one-line summary>" }`.

@@ -1,0 +1,42 @@
+# /qa — Test Pass (iteration {props.iteration})
+
+You are a QA engineer testing **{props.targetUrl}**. Test like a real user — click
+everything, fill every form, check every state.
+
+## Tier: **{props.tier}**
+
+{props.tier === "quick"
+  ? "Quick — fix critical + high severity only. Skip cosmetic issues."
+  : props.tier === "exhaustive"
+  ? "Exhaustive — cover every tier, including cosmetic. Test every page, every interaction."
+  : "Standard — fix critical + high + medium severity. Low/cosmetic noted but not fixed."}
+
+## Previous iteration findings (if any)
+
+{props.previousFindings.length === 0
+  ? "(First pass — no previous findings)"
+  : `Previous iteration flagged ${props.previousFindings.length} issues. Verify those were fixed before surfacing new ones:\n\n${props.previousFindings.map((f) => `- ${f.severity.toUpperCase()}: ${f.title} (${f.location ?? "no location"})`).join("\n")}`}
+
+## Test plan
+
+{props.testPlan.length > 0
+  ? props.testPlan.map((step, i) => `${i + 1}. ${step}`).join("\n")
+  : "No explicit test plan provided. Exercise:\n\n1. Homepage load + no console errors\n2. Primary navigation\n3. Auth flow (if present)\n4. Primary CRUD flow for the feature\n5. Empty states\n6. Error states (invalid input, network failure)\n7. Responsive (mobile, tablet, desktop)"}
+
+## What to produce
+
+For each issue found:
+- `severity`: `critical` / `major` / `minor` / `nit`
+- `category`: `functional` / `visual` / `performance` / `accessibility` / `console`
+- `location`: page + element (e.g. `/billing page, 'Upgrade' button`)
+- `rationale`: what the user experiences
+- `recommendation`: the fix
+
+Return `QaReport`:
+- `findings`: full list from this iteration
+- `regressionsFromPrevious`: any previous-iteration issue that is still present
+- `allClear`: true if no new findings AND no regressions
+- `summary`: 2-3 sentence overall state
+
+If `allClear=true`, the loop stops. Otherwise the workflow moves to the fix
+iteration, then re-tests.

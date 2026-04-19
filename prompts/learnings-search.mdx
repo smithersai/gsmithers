@@ -1,0 +1,16 @@
+## Learnings search
+
+Before producing output, check for relevant past learnings. gstack persists one-line
+lessons to `~/.gstack/learnings/` keyed by skill + repo slug.
+
+```bash
+LEARNINGS_FILE="$HOME/.gstack/learnings/{props.skillName}.md"
+if [ -f "$LEARNINGS_FILE" ]; then
+  echo "=== Past learnings for /{props.skillName} ==="
+  tail -20 "$LEARNINGS_FILE"
+fi
+```
+
+If anything applies to the current request, factor it into your response. If you
+discover a new lesson worth persisting, append it at the end of this workflow
+(see `<LearningsLog/>`).

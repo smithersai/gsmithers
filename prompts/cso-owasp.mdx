@@ -1,0 +1,46 @@
+# /cso — OWASP Top 10 Audit
+
+Audit the branch diff against the OWASP Top 10 (2021 edition). Report only
+findings genuinely present in the diff.
+
+## Diff under audit
+
+Files changed: {props.diff.filesChanged}
+Base: `origin/{props.diff.baseBranch}`
+
+```diff
+{props.diff.patch}
+```
+
+## OWASP Top 10 checklist
+
+For each category, scan the diff and flag concrete findings:
+
+1. **A01 Broken Access Control** — new endpoints without authz, path traversal,
+   privilege escalation, tenant boundary violations
+2. **A02 Cryptographic Failures** — weak algorithms, hardcoded secrets in diff,
+   TLS regressions, password storage issues
+3. **A03 Injection** — SQL/NoSQL/OS command/LDAP/XPath injection; unsanitized
+   user input flowing into interpreters
+4. **A04 Insecure Design** — missing rate limits on sensitive endpoints, trust
+   assumptions that don't hold, threat-model gaps
+5. **A05 Security Misconfiguration** — default credentials, overly permissive
+   CORS, missing security headers, verbose error messages
+6. **A06 Vulnerable Components** — dependencies with known CVEs added or
+   upgraded to vulnerable versions
+7. **A07 Authentication Failures** — weak session management, credential
+   stuffing exposure, MFA bypasses
+8. **A08 Software/Data Integrity Failures** — unsigned package sources, CI/CD
+   shortcuts, unchecked deserialization
+9. **A09 Logging + Monitoring Failures** — removed audit logs, log data that
+   leaks secrets, missing security-event logging
+10. **A10 Server-Side Request Forgery** — user-controlled URLs passed to
+    fetch/curl/http without allowlisting
+
+## What to produce
+
+Findings matching `reviewFindingSchema` — severity, category (OWASP code like
+`A03`), location (file:line), rationale, recommendation. Skip categories where
+the diff genuinely doesn't touch anything relevant.
+
+Return `ReviewOutput` with findings + a rollup summary + verdict.

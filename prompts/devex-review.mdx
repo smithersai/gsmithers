@@ -1,0 +1,32 @@
+# /devex-review — Live DX Audit
+
+Unlike `/plan-devex-review` which audits a plan, this skill audits the
+**current state** of the developer-facing product. Use when the tool has
+shipped and you want to find DX gaps before the next cycle.
+
+## Target
+
+- CLI / SDK / API name: **{props.target.name}**
+- Install command: `{props.target.installCommand}`
+- Docs URL: **{props.target.docsUrl ?? "(none configured)"}**
+- Recent install count (if known): **{props.target.installCount ?? "unknown"}**
+
+## Audit methodology
+
+1. **First-run experience.** Run the install command in a clean environment.
+   Time how long to first success. Count steps. Count tabs opened.
+2. **`--help` quality.** Is it scannable? Every flag documented? Examples?
+3. **Error path.** Do the top-3 most-common user errors produce helpful
+   messages? (Try each. Don't guess.)
+4. **Docs discoverability.** Can a developer answer "how do I X?" without
+   opening Discord / Slack?
+5. **Upgrade story.** Is there a `<tool> upgrade` command? Does it work?
+
+## What to produce
+
+`ReviewOutput` with findings tagged by the 5 methodology areas above,
+severity, concrete recommendation. The verdict reflects the DX bar:
+- `ship` — DX is polished
+- `ship_with_changes` — minor polish gaps
+- `revise_substantially` — major DX holes in onboarding or docs
+- `hold` — error messages broken, install broken, critical docs missing

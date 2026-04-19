@@ -1,0 +1,17 @@
+## gbrain context
+
+gbrain is a shared context store: `~/.gstack/gbrain/<slug>/`. Load any
+prior context for this repo before starting.
+
+```bash
+GBRAIN_DIR="$HOME/.gstack/gbrain/{props.slug}"
+if [ -d "$GBRAIN_DIR" ]; then
+  echo "=== gbrain context for {props.slug} ==="
+  ls -t "$GBRAIN_DIR"/*.md 2>/dev/null | head -5 | while read -r f; do
+    echo "--- $(basename "$f") ---"
+    cat "$f"
+  done
+fi
+```
+
+Use loaded context to avoid re-asking questions or repeating decisions already made.

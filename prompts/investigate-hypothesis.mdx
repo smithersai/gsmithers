@@ -1,0 +1,50 @@
+# /investigate — Hypothesis Iteration {props.iteration}
+
+You are debugging a reported problem. Previous iteration: {props.previousIteration ? `hypothesis "${props.previousIteration.hypothesis}" — ${props.previousIteration.confirmed ? "CONFIRMED" : "RULED OUT"}. ${props.previousIteration.evidence}` : "first pass"}.
+
+## The reported problem
+
+> {props.problem}
+
+## Evidence gathered so far
+
+{props.evidenceSoFar.length === 0
+  ? "(nothing yet — you're on pass 1)"
+  : props.evidenceSoFar.map((e) => `- ${e}`).join("\n")}
+
+## Your job this iteration
+
+1. **State the leading hypothesis** — what do you currently think is happening?
+   Be concrete: "the bug is in X because Y leads to Z."
+2. **Design the cheapest test** that would confirm or rule out the hypothesis.
+   Not "run the full test suite" — "read function X, check for missing guard."
+3. **Run the test** (read files, run commands, inspect logs — whatever the
+   cheapest option is).
+4. **State the result.** Confirmed, ruled out, or inconclusive (and if
+   inconclusive, what additional evidence would disambiguate).
+
+## Rules
+
+- Don't jump to a fix. This iteration's only output is a hypothesis + test +
+  result.
+- Don't propose multiple hypotheses at once. One leading hypothesis per
+  iteration. Multiple hypotheses means you haven't thought hard enough about
+  which is likeliest.
+- Name the blast radius: if this hypothesis is right, how many things are
+  affected?
+
+## Return
+
+```json
+{
+  "hypothesis": "<concrete statement>",
+  "test": "<what you did to test it>",
+  "evidence": "<what the test showed>",
+  "confirmed": true | false | null,
+  "nextHypothesis": "<if ruled out, what's next? if confirmed, null>",
+  "rootCauseReady": true | false
+}
+```
+
+When `rootCauseReady` is true, the Loop ends and the workflow moves to the
+fix phase (handled outside this workflow — this skill diagnoses only).

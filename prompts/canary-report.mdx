@@ -1,0 +1,48 @@
+# /canary — Post-Deploy Health Report
+
+You're monitoring the site after a deploy. Baseline + current snapshots are
+captured. Decide whether the deploy is healthy, degraded, or broken.
+
+**Scope of evidence available to you:** HTTP status codes, total load time per
+page, and a body-content hash per page. That's it — this workflow does NOT
+capture browser console errors, screenshots, or visual diffs. Don't judge on
+evidence you don't have.
+
+## Inputs
+
+- Baseline captured: **{props.baseline.capturedAt}** ({props.baseline.pages.length} pages)
+- Current iteration: **{props.iteration}** of **{props.maxIterations}**
+- Current snapshot taken: **{props.current.capturedAt}**
+
+**Comparison (per page):**
+
+```json
+{JSON.stringify(props.comparisons, null, 2)}
+```
+
+## Decision criteria
+
+- **HEALTHY** — every page returns the same status it did at baseline, load
+  time within 20%, body hash either unchanged or changed in an expected way
+  (e.g. deploys intentionally update content).
+- **DEGRADED** — one or two pages slower than baseline, or body-hash drift
+  on pages you'd expect to stay stable. Watch, don't rollback.
+- **BROKEN** — page that used to 2xx now 5xx, auth-gated page now 2xx (or
+  vice versa), or load time regression on a critical path > 50%.
+
+## Rules
+
+- Don't invent findings that rely on evidence the workflow didn't capture
+  (no "console errors observed" — that's outside the current snapshot
+  schema).
+- Return `rollbackRecommended: true` only when status regressed on a page
+  that was 2xx at baseline.
+- If BROKEN and the first iteration was healthy, prefer rollback over
+  continued monitoring.
+
+Return `CanaryVerdict`:
+- `status`: "healthy" | "degraded" | "broken"
+- `summary`: 2-3 sentence plain-English rollup
+- `regressions`: list of page + metric + delta
+- `shouldContinueMonitoring`: boolean
+- `rollbackRecommended`: boolean

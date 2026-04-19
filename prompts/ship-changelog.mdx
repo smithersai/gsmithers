@@ -1,0 +1,42 @@
+# /ship — CHANGELOG entry
+
+Draft a CHANGELOG entry for this branch.
+
+## Inputs
+
+- Branch: **{props.preflight.currentBranch}**
+- Current version: **{props.currentVersion}**
+- Commits on branch:
+
+{props.commits.map((c) => `- ${c.hash.slice(0, 10)} ${c.subject}`).join("\n")}
+
+**Is the current version already released on main?** {props.baseVersionReleased ? "YES — you must bump to a new version." : "NO — you can either bump or edit the existing entry for this version if it's your work."}
+
+## Rules for the entry
+
+CHANGELOG.md is **for users**, not contributors. Treat it like product release notes.
+
+- **Lead with what the user can now do that they couldn't before.** Sell the feature.
+- **Use plain language, not implementation details.** "You can now..." not "Refactored the..."
+- **Never mention internal infrastructure** — eval runs, contributor tracking, file moves the user can't see.
+- Put contributor / internal changes in a separate **"For contributors"** section at the bottom.
+- Every entry should make someone think "oh nice, I want to try that."
+- No jargon.
+
+## Version bump rule
+
+If the base version is already released, bump. The bump level follows this
+heuristic:
+
+- **Patch** (z.y.z.**w+1**) — bug fix only, no new user-facing behavior
+- **Minor** (z.y.**z+1**.0) — new feature, opt-in, backwards-compatible
+- **Major** (z.**y+1**.0.0) — behavior change users will notice
+
+**New entry goes on top** of CHANGELOG, above the prior top entry.
+
+## What to produce
+
+Return `{ version: "x.y.z.w", entry: "markdown block", bumpLevel: "patch"|"minor"|"major" }`.
+
+The `entry` should be the exact markdown block to insert, including the
+`## [x.y.z.w] — YYYY-MM-DD` header and the body.

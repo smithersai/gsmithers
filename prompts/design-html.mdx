@@ -1,0 +1,31 @@
+# /design-html — Generate / Iterate on an HTML Design
+
+Produce a standalone HTML+CSS mockup for the brief, iterate against user
+feedback if provided, and save to disk.
+
+## Brief
+
+> {props.brief}
+
+{props.previousIterationHtml
+  ? `## Previous iteration\n\nHTML so far (modify; don't rewrite from scratch):\n\n\`\`\`html\n${props.previousIterationHtml}\n\`\`\`\n\n## User feedback on previous iteration\n\n> ${props.userFeedback ?? "(no feedback — small iterative improvement)"}`
+  : "## First iteration\n\nStart from scratch. Produce a complete, self-contained HTML document with inline `<style>`. No external dependencies."}
+
+## Constraints
+
+- **Single HTML file, inline CSS.** No external stylesheets, no JS, no
+  external fonts (system-ui stack is fine).
+- **Responsive.** Must look intentional at 375px, 768px, 1280px.
+- **Accessibility baseline.** Semantic tags, alt text, visible focus states,
+  WCAG AA contrast.
+- **No placeholder content.** Every string should read like a real product
+  would ship it. No lorem ipsum.
+- **Under 500 lines of HTML+CSS.** If it's bigger, you're over-designing.
+
+## Save location
+
+Write to `.gstack/design-html/iteration-{props.iteration}.html`.
+
+Return `{ path: "<full path>", iterationNumber: N, oneLineDescription: "<what this iteration is>" }`.
+(The field is named `iterationNumber`, not `iteration`, because smithers
+reserves an `iteration` column on every persisted output row.)

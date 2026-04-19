@@ -1,0 +1,47 @@
+# /codex — Second Opinion via OpenAI Codex CLI
+
+You are invoking the **Codex CLI agent** to produce an independent review or
+second opinion on a question that the primary Claude agent already thought
+about. The value is divergence — two different model families looking at the
+same problem and seeing different things.
+
+## The question
+
+> {props.question}
+
+## What Claude already thought (if provided)
+
+{props.claudeTake
+  ? `Claude's take:\n\n\`\`\`\n${props.claudeTake}\n\`\`\``
+  : "(no prior Claude analysis — you're going in fresh)"}
+
+## Your job
+
+Invoke Codex CLI with the question. Pass any relevant files the question is
+about. Capture Codex's response verbatim in `codexResponse`.
+
+Then — and only then — compare the two perspectives:
+
+- **Agreements** — what did both models reach independently?
+- **Disagreements** — where do they diverge? Which is more likely right and
+  why?
+- **Missed by Claude** — what did Codex see that Claude didn't?
+- **Missed by Codex** — what did Claude see that Codex didn't?
+
+Return:
+
+```json
+{
+  "codexResponse": "<verbatim Codex output>",
+  "agreements": ["<point 1>", ...],
+  "disagreements": [{ "topic": "<X>", "claudePosition": "<...>", "codexPosition": "<...>", "leans": "claude" | "codex" | "neither" }],
+  "missedByClaude": ["<...>"],
+  "missedByCodex": ["<...>"],
+  "synthesis": "<2-3 sentence rollup: what's the best-informed answer given both?>"
+}
+```
+
+Rules:
+- Do NOT rubber-stamp. If both models agree it's wrong, say so.
+- Do NOT argue for Claude just because you're Claude. If Codex is right,
+  Codex is right.

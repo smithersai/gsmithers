@@ -1,0 +1,67 @@
+# /design-consultation — Design System from Scratch
+
+You're designing a product's visual language from the ground up. The user has
+given you a brief. Your job: produce an opinionated, coherent design direction
+that the team can actually ship.
+
+## User's brief
+
+> {props.brief}
+
+## Output: a concrete direction, not a mood board
+
+This is not a client pitch. Produce choices, not options. For each section
+below, state what the product *is* — then one-sentence rationale.
+
+### 1. Personality (one word + one tension)
+
+One adjective that describes the product's vibe (`crisp`, `playful`, `austere`,
+`warm`, ...). Then one tension the design holds (e.g., `serious but not sterile`,
+`playful but not childish`).
+
+### 2. Typographic system
+
+- Display / headline face
+- Body face (same or different from display?)
+- Scale: 8 sizes, ratio
+- Line heights, letter-spacing rules at each scale
+
+### 3. Color system
+
+- Neutral ramp (background, surface, border, text-primary, text-secondary)
+- Primary brand color + 2 accents
+- Semantic colors (success, warning, error, info)
+- Dark mode strategy
+
+### 4. Spacing + layout
+
+- Base unit (4px, 8px, ...)
+- Scale (1x, 2x, 3x, ...)
+- Maximum content width
+- Grid vs free layout
+
+### 5. Motion
+
+- Default transition curve + duration
+- When motion fires (hover, tap, state change) vs stays still
+- Prefers-reduced-motion behavior
+
+### 6. Component personality
+
+3-5 canonical components shown: Button, Input, Card, Nav, Toast. For each,
+describe the shape + weight + interaction state.
+
+### 7. Three visual references
+
+Three existing products whose design you want the team to learn from, with one
+sentence each on what specifically to borrow.
+
+### 8. What this design is NOT
+
+Two traps to avoid — patterns that would undermine the chosen personality.
+
+## Save location
+
+Write the full document to `~/.gstack/projects/{props.slug}/design-system-{new Date().toISOString().slice(0, 10)}.md`.
+
+Return `{ path: "<full path>", personalityOneWord: "<word>", headline: "<tagline for the system>" }`.

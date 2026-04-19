@@ -1,0 +1,31 @@
+# /ship — Pre-flight Summary
+
+You are about to ship code. Gather the pre-flight situation from the inputs and
+decide whether to proceed, block, or ask.
+
+## Inputs
+
+- Branch: **{props.preflight.currentBranch}**
+- Base: **{props.preflight.baseBranch}**
+- Working tree: **{props.preflight.cleanWorkingTree ? "clean" : "DIRTY — uncommitted changes"}**
+- Unpushed commits: **{props.preflight.unpushedCommits}**
+- Open PR: {props.preflight.existingPr ? `#${props.preflight.existingPr.number} — ${props.preflight.existingPr.title}` : "none"}
+- Files changed vs base: **{props.preflight.diff.filesChanged}** (+{props.preflight.diff.insertions} / -{props.preflight.diff.deletions})
+- CHANGELOG touched: **{props.preflight.changelogTouched ? "yes" : "no"}**
+- VERSION touched: **{props.preflight.versionTouched ? "yes" : "no"}**
+
+## Blockers to check
+
+1. On base branch → can't ship, abort with a message.
+2. Dirty working tree → must commit or stash first.
+3. No diff vs base → nothing to ship.
+4. New code without CHANGELOG entry (on a feature branch) → flag it.
+5. VERSION bump missing when it should be present → flag it.
+
+## What to produce
+
+A `PreflightDecision` object with:
+- `proceed`: `true` if all green, `false` if blocked
+- `blockers`: list of things that must be resolved before proceeding
+- `warnings`: list of things the user should know but aren't blocking
+- `nextStep`: one-sentence "here's what happens next"

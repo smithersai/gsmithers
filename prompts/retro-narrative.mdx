@@ -1,0 +1,86 @@
+# /retro — Weekly Engineering Retrospective
+
+You are writing a retrospective for the time window **{props.data.window}** covering
+**{props.data.totals.commits} commits** across **{props.data.totals.contributors}
+contributor(s)**. The current user is **{props.data.currentUser}** — frame the
+personal section in first person.
+
+## Data you've been given
+
+All raw git data was already gathered deterministically — do not re-run git
+commands. Trust the numbers in `props.data`.
+
+```json
+{JSON.stringify(props.data, null, 2)}
+```
+
+## Your job
+
+Produce a markdown retrospective with these sections **in order**:
+
+### 1. Tweetable summary (first line, before everything else)
+
+Single line. Example:
+```
+Week of {props.data.startDate}: {props.data.totals.commits} commits ({props.data.totals.contributors} contributors), {Math.round(props.data.totals.insertions / 1000 * 10) / 10}k LOC, {Math.round((props.data.totals.testLoc / Math.max(1, props.data.totals.insertions)) * 100)}% tests, peak: {props.data.peakHour}:00
+```
+
+### 2. Summary table
+
+Features shipped, commits, weighted commits, contributors, PRs, logical SLOC,
+raw LOC breakdown, test ratio, active days, sessions. Use the numbers from
+`props.data.totals` and `props.data.metrics`.
+
+### 3. Per-author leaderboard
+
+Sort by commits descending. The current user ({props.data.currentUser}) appears
+first, labeled "You ({props.data.currentUser})".
+
+### 4. Time & session patterns
+
+Hourly histogram. Peak hours, dead zones, whether pattern is bimodal.
+Session count, deep sessions (50+ min), average duration.
+
+### 5. Shipping velocity
+
+Commit type breakdown (feat/fix/refactor/test/chore/docs) as percentage bars.
+**Flag if fix ratio exceeds 50%** — this signals ship-fast-fix-fast pattern.
+
+### 6. Code quality signals
+
+Hotspot analysis (top files by change frequency). Test LOC ratio.
+If test ratio < 20%, call it out as a growth area.
+
+### 7. Your week (personal deep-dive)
+
+For {props.data.currentUser} only. Commits, LOC, test ratio, peak hours, focus
+areas, biggest ship.
+- **What you did well** (2-3 specific things anchored in actual commits)
+- **Where to level up** (1-2 specific, actionable suggestions)
+
+### 8. Team breakdown
+
+{props.data.totals.contributors > 1
+  ? "One section per teammate (skip the current user, already covered above). For each: what they shipped (2-3 sentences), praise (1-2 specific things anchored in commits — never generic), opportunity for growth (1 specific suggestion framed as leveling up, not criticism)."
+  : "Skip — solo repo."}
+
+### 9. Top 3 team wins
+
+Highest-impact things shipped in the window. What it was, who shipped it, why
+it matters.
+
+### 10. 3 habits for next week
+
+Small, practical, realistic. Each must take under 5 minutes to adopt.
+
+## Tone
+
+- Encouraging but candid, no coddling
+- Specific and concrete — always anchor in actual commits
+- Skip generic praise — say exactly what was good and why
+- Frame improvements as leveling up, not criticism
+- Praise should feel like something you'd say in a 1:1 — specific, earned, genuine
+- Keep total output around 2500–3500 words
+
+Output only the markdown retrospective. No preamble, no apology, no
+"here's your retro". Start with the tweetable line and dive in.

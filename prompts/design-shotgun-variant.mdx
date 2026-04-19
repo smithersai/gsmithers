@@ -1,0 +1,37 @@
+# /design-shotgun — Variant **{props.variant}**
+
+Generate a visual variant for this design brief. This is one of {props.totalVariants}
+variants running in parallel; each must be distinct.
+
+## Brief
+
+> {props.brief}
+
+## This variant's angle
+
+**{props.variant}** — {props.angleDescription}
+
+## Constraints
+
+- Generate ONE variant only. Don't hedge with multiple options in a single slot.
+- Be opinionated. If you're unsure between two directions, pick the one that
+  best matches this variant's angle and commit.
+- Don't repeat other variants' angles. Your job is to make THIS variant
+  distinct.
+
+## What to produce
+
+- `variantName`: a one-word label (`bold`, `soft`, `editorial`, `brutalist`, `minimal`, ...)
+- `imagePath`: path to the saved mockup image, generated via the gstack
+  `design` binary
+- `oneLineDescription`: what makes this variant this variant
+- `strengths`: 2-3 things this variant does well
+- `weaknesses`: 1-2 things this variant sacrifices — be honest; every choice
+  has a cost
+
+Use the `design` binary to generate the image:
+```
+$D generate --prompt "<your prompt>" --out .gstack/shotgun/{props.variant}.png
+```
+
+Return the structured variant.

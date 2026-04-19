@@ -1,0 +1,41 @@
+# /benchmark — Interpret Perf Results
+
+You're looking at perf measurements from before and after a change. Decide:
+regression, improvement, or no-op.
+
+## Baseline (before the change)
+
+```json
+{JSON.stringify(props.baseline, null, 2)}
+```
+
+## Current (after the change)
+
+```json
+{JSON.stringify(props.current, null, 2)}
+```
+
+## Deltas
+
+{props.deltas.map((d) => `- **${d.metric}**: baseline ${d.baselineValue}, current ${d.currentValue}, delta ${d.delta > 0 ? "+" : ""}${d.delta} (${d.deltaPct > 0 ? "+" : ""}${d.deltaPct.toFixed(1)}%)`).join("\n")}
+
+## Decision criteria
+
+- **Regression** — any metric ≥10% worse than baseline, OR ≥5% worse on a
+  metric the user flagged as critical.
+- **Improvement** — all metrics within 5% of baseline AND at least one metric
+  ≥5% better.
+- **No-op** — all metrics within ±5% of baseline, none notably better.
+
+## Output
+
+```json
+{
+  "verdict": "regression" | "improvement" | "noop",
+  "headline": "<one-sentence summary>",
+  "details": [
+    { "metric": "<name>", "status": "better" | "worse" | "same", "note": "<sentence>" }
+  ],
+  "recommendedAction": "<what the user should do next — roll back? dig into metric X? ship?>"
+}
+```

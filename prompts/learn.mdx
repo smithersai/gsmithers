@@ -1,0 +1,29 @@
+# /learn — Log a Lesson
+
+Capture a one-line lesson to persist across sessions. Next time a gstack
+workflow runs in this repo, it will load this lesson as part of the
+learnings-search partial.
+
+## User's lesson
+
+> {props.lesson}
+
+## What to do
+
+1. Normalize the lesson — trim filler words, keep it punchy. Aim for under 120
+   chars if possible, but don't butcher meaning.
+2. Decide on a category tag: `architecture`, `tooling`, `process`, `people`,
+   `performance`, `security`, or `misc`.
+3. Write to `~/.gstack/learnings/{props.scope}.md` (append a new line).
+4. If the lesson duplicates or contradicts an existing entry, note that and
+   recommend an edit instead of a blind append.
+
+Format of the stored line:
+```
+YYYY-MM-DD [category] lesson text
+```
+
+Return:
+- `path`: full path to the learnings file
+- `storedLine`: exact line appended
+- `duplicatesFound`: any similar prior entries (may be empty)

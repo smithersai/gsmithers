@@ -1,0 +1,52 @@
+# /land-and-deploy — Readiness Gate
+
+You are deciding whether this PR is ready to merge AND deploy. Both gates must
+pass before proceeding.
+
+## Inputs
+
+- PR: **#{props.pr.number} — {props.pr.title}**
+- Branch: **{props.pr.branch}** → **{props.pr.baseBranch}**
+- CI status: **{props.ci.state}** ({props.ci.passingChecks} passing / {props.ci.failingChecks} failing / {props.ci.pendingChecks} pending)
+- Review staleness: **{props.review.staleness}**
+- Review decision: **{props.review.decision}**
+- Document-release run for this PR: **{props.docReleaseDone ? "yes" : "no"}**
+
+## Deploy infrastructure (detected)
+
+- Deploy command: **{props.deploy.command ?? "(not detected)"}**
+- Staging URL: **{props.deploy.stagingUrl ?? "(none configured)"}**
+- Production URL: **{props.deploy.productionUrl ?? "(none configured)"}**
+
+## Gate criteria
+
+**Merge gate** (all must pass):
+- CI: all required checks passing
+- Review: no unresolved major/critical findings. `reviewDecision === "CHANGES_REQUESTED"` is an automatic hard block — set `readyToMerge=false` regardless of other signals.
+- Document-release: has been run this PR (if PR touches doc-worthy code)
+- PR body: matches the actual diff (no "TODO: update PR body")
+
+**Deploy gate** (all must pass, ONLY if merge gate passes):
+- Deploy command detected and known-working
+- Staging smoke-test plan exists OR user explicitly opts into prod-only deploy
+- No sensitive changes that need human eyes (auth, billing, data migrations)
+
+## What to produce
+
+```json
+{
+  "readyToMerge": true | false,
+  "readyToDeploy": true | false,
+  "mergeBlockers": ["<blocker sentence>", ...],
+  "deployBlockers": ["<blocker sentence>", ...],
+  "warnings": ["<warning sentence>", ...],
+  "requiresConfirmation": true | false,
+  "confirmationPrompt": "<the single question to ask the user if requiresConfirmation=true>"
+}
+```
+
+Rules:
+- If anything in `mergeBlockers`, `readyToMerge` is false.
+- If `readyToMerge` is false, `readyToDeploy` must be false.
+- If sensitive changes detected, set `requiresConfirmation=true` with a specific
+  prompt — even if technically everything passes.

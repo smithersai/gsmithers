@@ -1,0 +1,53 @@
+# /document-release — Post-Ship Documentation Sync
+
+Code just shipped. Now audit every doc affected and bring them up to date.
+
+## Inputs
+
+- Version shipped: **{props.shippedVersion}**
+- PR: {props.prUrl ?? "(no PR)"}
+- Files changed:
+
+{props.filesChanged.map((f) => `- \`${f}\``).join("\n")}
+
+## Per-file doc audit
+
+For each file in `filesChanged`, decide:
+
+1. Does this file have user-facing docs it could affect? (README mentions it,
+   skill docs reference it, tutorial screenshots include it)
+2. Are the affected docs still accurate after this change?
+3. If not: what's the minimum edit that makes them accurate?
+
+**Auto-applicable edits:** rename references, updated command flags, updated
+example output, updated file paths, updated version numbers. Apply these
+directly.
+
+**Risky/questionable edits:** behavior changes, deprecations, new concepts
+that deserve their own section. Surface these in `openQuestions` for the
+user to confirm.
+
+## Cross-doc consistency checks
+
+After per-file edits, check:
+
+- Does README still link to every skill it should? Any dead links?
+- Does CHANGELOG match the shipped version?
+- Does any doc reference a command flag that was renamed?
+- Are example outputs still correct?
+
+## What to produce
+
+```json
+{
+  "autoAppliedEdits": [
+    { "file": "README.md", "summary": "Renamed `--old-flag` → `--new-flag` in 3 examples" }
+  ],
+  "openQuestions": [
+    { "file": "docs/tutorial.md", "question": "Tutorial walks through deleting-workspaces, but this PR removes the delete API — should the tutorial be removed or updated to show the new archive flow?" }
+  ],
+  "summary": "Auto-applied 3 edits. 1 open question."
+}
+```
+
+Do NOT edit CHANGELOG or VERSION here — /ship already handled those.

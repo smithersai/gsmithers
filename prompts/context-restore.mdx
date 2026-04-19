@@ -1,0 +1,31 @@
+# /context-restore — Resume from saved context
+
+Pick the right saved-context file (or the one the user named) and orient the
+session to pick up where the prior session stopped.
+
+## Saved contexts
+
+{props.saved.length === 0
+  ? "No saved contexts exist for this project yet. Tell the user: 'No saved sessions found. Run `/context-save` at the end of a session to create one.' and stop."
+  : props.saved.map((s) => `- \`${s.file}\` · saved ${s.mtime} · title: ${s.title ?? "(unknown)"}`).join("\n")}
+
+## Current state
+
+- Branch: **{props.state.branch}**
+- Dirty: **{props.state.dirty ? "yes" : "no"}**
+- Last commit: **{props.state.lastCommit ?? "(none)"}**
+
+## User's ask
+
+> {props.userRequest ?? "(no specific context requested — use the most recent)"}
+
+## What to do
+
+1. If the user named a file, load that one. Otherwise load the most recent.
+2. Read it. Summarize what's in it.
+3. Reconcile with current state:
+   - If the saved branch differs from current, call out the difference.
+   - If the saved file's "Remaining Work" items look already done, say so.
+4. Propose next steps: "Pick up at step N" or "Before continuing, check X."
+
+Return `{ loadedFile: "<file path>", summary: "<2-3 sentence rollup>", nextSteps: ["<step1>", "<step2>"] }`.
