@@ -1,156 +1,192 @@
-# smithersai/gstack
+# gsmithers
 
-A port of [garrytan/gstack](https://github.com/garrytan/gstack) to
-[smithers-orchestrator](https://smithers.sh). Every skill that gstack shipped
-as a generated `SKILL.md.tmpl` is rebuilt here as a typed smithers workflow —
-a single `.tsx` file composing deterministic Tasks (git/gh/curl) and agent
-Tasks (MDX prompts) with shared zod schemas.
+gsmithers is a Smithers-powered fork of
+[garrytan/gstack](https://github.com/garrytan/gstack). It keeps the gstack
+product surface: planning reviews, QA, browser automation, release work,
+retros, safety guardrails, and multi-agent review. The difference is that the
+AI-engineering workflows are implemented as typed
+[Smithers](https://smithers.sh) workflows instead of long generated Markdown
+scripts.
 
-> **Upstream:** [`garrytan/gstack`](https://github.com/garrytan/gstack) by
-> Garry Tan. This repo is a showcase of how gstack's AI-engineering workflows
-> look when ported onto smithers' typed orchestration primitives — Garry's
-> skills, Garry's prompts, Garry's YC voice, all preserved. This fork exists
-> to exercise smithers against real, non-trivial workflows, not to replace
-> upstream.
+The goal of this fork is to show what happens when a prompt-and-skill system is
+rebuilt on durable orchestration primitives: every meaningful step has a stable
+node id, a Zod-typed output, a SQLite checkpoint, and an event log that can be
+inspected or resumed.
 
-## What changed
+## What Smithers Adds
 
-Upstream gstack skills live in `<skill>/SKILL.md.tmpl` files that get
-preprocessed into static `SKILL.md` documents by `scripts/gen-skill-docs.ts`.
-Claude Code reads the generated Markdown and walks the bash blocks inside.
-
-The port keeps every feature but replaces the pipeline with smithers:
-
-| aspect | upstream gstack | smithersai/gstack |
+| gstack concern | upstream shape | gsmithers shape |
 |---|---|---|
-| skill source | `*/SKILL.md.tmpl` + `scripts/resolvers/*.ts` | `workflows/*.tsx` + `prompts/*.mdx` |
-| skill output | generated `SKILL.md` (static) | JSX graph of `<Task/>`, `<Loop/>`, `<Parallel/>`, `<Branch/>` |
-| state between steps | bash variables re-reading shell state | zod-typed Task outputs, persisted to SQLite |
-| prompts | `{{PLACEHOLDER}}` substitution at build time | MDX components rendered per-run with typed props |
-| config/repo probe | ~850 lines of inline bash preamble | `lib/smithers/preamble.ts` → deterministic Task output |
-| agent roster | decided implicitly per skill | `agents.ts` — one place to swap models/providers |
-| human gates | `AskUserQuestion` mid-skill | `needsApproval` + `requiresConfirmation` on specific Tasks |
-| observability | none beyond shell logs | smithers persists every Task input/output + agent transcript |
+| workflow source | generated `SKILL.md` from `SKILL.md.tmpl` | `workflows/*.tsx` with JSX control flow |
+| task boundaries | prose steps and shell snippets | [`<Task>`](https://smithers.sh/components/task) nodes with typed outputs |
+| sequencing | agent follows Markdown order | Smithers [`<Workflow>`](https://smithers.sh/docs/workflow) execution model |
+| branching and loops | bash variables plus instructions | [`<Branch>`](https://smithers.sh/components/branch), [`<Parallel>`](https://smithers.sh/components/parallel), and loop components |
+| state | re-read shell state and temp files | Zod rows persisted to SQLite checkpoints |
+| human approval | `AskUserQuestion` inside the transcript | Smithers approval gates and resumable decisions |
+| observability | terminal output | persisted events, logs, node outputs, and inspectable runs |
+| agent routing | repeated per-skill prose | one typed roster in `agents.ts` |
 
-### Concrete improvements the port forced
+Concretely, here is the body of `workflows/retro.tsx` — the entire orchestration
+surface for the weekly retrospective skill:
 
-Every one of these started as a codex finding during review and ended up in the
-port:
+```tsx
+<Workflow name="retro">
+  <Task id="preamble" output={outputs.preamble} timeoutMs={15_000}>
+    {async () => gatherPreambleContext({ skillName: "retro", tier: 2, runId: ctx.runId })}
+  </Task>
 
-- **Merge-completion polling.** `gh pr merge --auto` returns immediately;
-  upstream land-and-deploy would race the deploy against a PR that hadn't
-  landed yet. The port polls `gh pr view --json state,mergeCommit` until
-  `state === "MERGED"` before handing off.
-- **`gh pr checks` field fix.** Upstream requested `conclusion`, which isn't
-  a valid field in current gh — the call silently failed and the gate
-  reported `unknown`. Fixed to `bucket,state,name` with proper
-  pass/fail/pending mapping.
-- **YAML scalar parser.** `gstack-config get` uses `awk '{print $2}'`, which
-  truncates `deploy_command: "vercel deploy --prod"` to `"vercel`. The port
-  reads `~/.gstack/config.yaml` directly with an escape-aware parser that
-  preserves URL fragments (`https://x/#/dashboard`), hex colors (`"#ff0000"`),
-  and setup-deploy's JSON-stringified values.
-- **Deterministic merge/deploy guards.** Upstream relied on the LLM gate for
-  merge/deploy approval. The port computes `mergeAllowed` and `deployAllowed`
-  in code from typed signals (`ci.state === "passing"`,
-  `review.decision !== "CHANGES_REQUESTED"`, `merge.merged === true`) and
-  `autoApprove` can't bypass a `requiresConfirmation: true` from the gate.
-- **Origin check for `/canary`.** Upstream accepted page paths via
-  `new URL(page, baseUrl)`. A path like `/\evil.com/path` resolves to a
-  different origin because WHATWG URL treats backslashes as slashes on
-  http(s). The port rejects any page that resolves off-origin.
-- **Shell-injection closure for canary body hash.** Upstream piped
-  `curl "${url}" | shasum` — a single-quote in a path argument broke out.
-  The port fetches with argv and hashes with `node:crypto`.
-- **Stash-gate before hard reset.** `/gstack-upgrade` runs `git reset --hard
-  origin/main` on the install checkout. If a stash fails to save, upstream
-  would reset anyway and delete in-progress work. The port throws before
-  the reset if the tree is still dirty after stashing.
-- **Sandbox-safe `cwd`.** `smithers bashTool` sandboxes `cwd` against the
-  workflow root before following symlinks. The default install path
-  `~/.claude/skills/gstack` is a symlink into this checkout; the port calls
-  `fs.realpath` first so the sandbox sees an in-root path.
-- **Session-cookie lifecycle.** `/setup-browser-cookies` can't split
-  launch/wait/capture across Task boundaries — session cookies only live in
-  the Playwright `BrowserContext`. The port uses a single Task that holds
-  the context open while polling a filesystem sentinel for the user's
-  "done" signal.
+  <Task id="gather" output={outputs.gather} timeoutMs={60_000}>
+    {async () => gatherRetroData(ctx.input, await detectBaseBranch())}
+  </Task>
 
-Every call-out above corresponds to a commit or diff in this repo. The full
-review log, round by round, is in `workflows/README.md`.
-
-### Review workflow
-
-Four adversarial rounds by OpenAI Codex (`codex exec`) against the port,
-each one reading `https://smithers.sh/llms-full.txt` before reviewing and
-grading P1/P2/P3 findings with confidence scores. Every finding was either
-fixed in code or documented as an upstream blocker. Round 18 returned:
-
-> Pre-Landing Review: No issues found. LGTM.
-> The only remaining blocker I see is the documented upstream
-> Smithers/Bun/react-reconciler runtime bug in workflows/README.md:38.
-
-## Repo layout
-
-```
-workflows/          31 ported skills, each a single .tsx file
-  README.md         per-skill port changelog + triage table
-prompts/            44 MDX prompt templates, rendered with typed props
-lib/smithers/       shared helpers
-  preamble.ts       repo probe + gstack-config reader (Task output)
-  shell.ts          sh, sh -c exec + resolveGstackBin
-  config.ts         YAML scalar parser for ~/.gstack/config.yaml
-  ctx.ts            readOutput / readOutputMaybe / readLatest
-  review.ts         shared ReviewOutput schema
-agents.ts           Claude + Codex provider roster
-examples/experimental/   speculative patterns that don't render under 0.16.1
-smithers.config.ts  entry point
+  <Task
+    id="narrative"
+    output={outputs.narrative}
+    needs={{ preamble: "preamble", data: "gather" }}
+    deps={{ preamble: preambleContextSchema, data: gatherOutputSchema }}
+    agent={agents.smart}
+  >
+    {(deps) => (
+      <>
+        <PreamblePrompt {...deps.preamble} />
+        <RetroNarrativePrompt data={deps.data} />
+      </>
+    )}
+  </Task>
+</Workflow>
 ```
 
-Everything outside `workflows/`, `prompts/`, `lib/smithers/`, `agents.ts`,
-`examples/`, `smithers.config.ts`, and the `.tsx`-related `package.json`
-additions is **unmodified from upstream**. The original SKILL.md files still
-work with the Claude Code skill loader; the smithers workflows are an
-orthogonal path.
+Each `<Task>` is a checkpointed node: typed output schema, declared
+dependencies, and a render function that returns either data or an MDX prompt
+the agent will execute. The upstream `retro/SKILL.md` expressed the same flow
+as ~400 lines of Markdown the agent had to interpret in order.
 
-## Running a workflow
+Useful Smithers docs:
+
+- [Quickstart](https://smithers.sh/quickstart)
+- [Execution model](https://smithers.sh/concepts/execution-model)
+- [Suspend and resume](https://smithers.sh/concepts/suspend-and-resume)
+- [Approvals](https://smithers.sh/concepts/approvals)
+- [Observability](https://smithers.sh/guides/monitoring-logs)
+- [CLI reference](https://smithers.sh/cli/overview)
+
+## What Is Implemented
+
+The repo has 31 runnable Smithers workflows in `workflows/`, backed by 45 MDX
+prompt modules and shared helpers in `lib/smithers/`.
+
+Core flows:
+
+- product framing: `office-hours`, `autoplan`
+- planning reviews: `plan-ceo-review`, `plan-eng-review`,
+  `plan-design-review`, `plan-devex-review`
+- implementation support: `codex`, `investigate`, `learn`, `context-save`,
+  `context-restore`
+- quality gates: `review`, `qa`, `qa-only`, `cso`, `health`
+- design workflows: `design-consultation`, `design-html`, `design-shotgun`,
+  `design-review`
+- release and operations: `ship`, `document-release`, `setup-deploy`,
+  `land-and-deploy`, `canary`, `benchmark`, `gstack-upgrade`, `retro`
+- browser/auth workflows: `setup-browser-cookies`
+
+Host-native gstack skills such as `careful`, `freeze`, `guard`, `unfreeze`,
+`browse`, `open-gstack-browser`, and `pair-agent` remain generated
+`SKILL.md` skills because they install shell hooks or drive the browser binary
+directly. They are still built, tested, and shipped by this repo; they are not
+duplicated as Smithers workflows when the host integration itself is the
+runtime.
+
+## Why This Is More Robust
+
+This port turned several instruction-level assumptions into executable checks:
+
+- `land-and-deploy` waits until GitHub reports the PR is actually merged before
+  deploying.
+- CI gates read current `gh pr checks` fields (`bucket`, `state`, `name`) and
+  map pass/fail/pending deterministically.
+- `setup-deploy` and `land-and-deploy` use approval gates for low-confidence or
+  destructive actions.
+- `canary` rejects off-origin page paths and hashes response bodies with
+  `node:crypto` instead of shell interpolation.
+- `gstack-upgrade` refuses to run `git reset --hard` unless stashing actually
+  cleaned the install checkout.
+- `setup-browser-cookies` keeps one Playwright context open for the whole
+  login flow so session cookies are captured before the browser closes.
+- shared repo/config probing lives in `lib/smithers/preamble.ts`, replacing a
+  large generated shell preamble with typed data.
+
+## Run It
+
+Install dependencies:
 
 ```bash
 bun install
-bun run typecheck
-bun run workflow:list
-bun run workflow:run workflows/retro.tsx --input '{"window":"7d"}' --allow-network
 ```
 
-See [`workflows/README.md`](workflows/README.md) for the per-skill contract,
-the `--allow-network` convention, the per-workflow `dbPath` rationale, and
-the full port changelog.
+List workflows:
 
-## Known blocker
+```bash
+bun run workflow:list
+```
 
-`smithers up` currently fails with
-`resolveEventTimeStamp is not a function` from inside
-`react-reconciler/cjs/react-reconciler.development.js`. This is an interop
-bug between `smithers-orchestrator@0.16.1`, `bun@1.3.12`, and
-`react-reconciler@0.33.x` — the host config doesn't expose
-`resolveEventTimeStamp` but bun's bundled reconciler expects it. Typecheck
-passes, schema DDL checks clean, workflow composition renders through the
-first frame before the reconciler error fires. Runtime behavior past the
-first frame is unverified until upstream ships a fix.
+Render a workflow graph without executing it:
 
-Details + reproduction steps: [`workflows/README.md`](workflows/README.md#known-issues).
+```bash
+./node_modules/.bin/smithers graph workflows/retro.tsx --input '{"window":"7d"}'
+```
 
-## Credits
+This prints the node DAG (`preamble → gather → narrative`), each task's input
+and output schemas, and the agent assignment — useful for catching wiring
+mistakes before spending tokens.
 
-- [garrytan/gstack](https://github.com/garrytan/gstack) — Garry Tan's
-  original skill library. Every prompt, every voice choice, every YC
-  reference in this repo came from there. Please read the upstream README
-  for the builder philosophy behind these workflows.
-- [smithers-orchestrator](https://smithers.sh) — the TypeScript/JSX
-  workflow runtime that made the port viable.
-- The port itself was built by Claude Code (Opus 4.7, 1M context) with
-  adversarial review by OpenAI Codex.
+Run a workflow:
 
-## License
+```bash
+./node_modules/.bin/smithers up workflows/retro.tsx \
+  --input '{"window":"7d"}' \
+  --allow-network
+```
 
-MIT, same as upstream.
+You'll see per-task status updates as each node enters, succeeds, or suspends,
+with the typed output for every completed task written to
+`./executions/<workflow>.db`. If a run fails or is interrupted mid-flight,
+re-running the same `smithers up` command resumes from the last successful
+checkpoint instead of starting over — the long-running planning and review
+workflows are designed to survive crashes, network blips, and human
+intervention.
+
+Use the pinned local Smithers CLI from `node_modules`; this repo depends on the
+package versions installed by `bun install`.
+
+## Verify
+
+```bash
+bun run typecheck
+bun run test
+bun run build
+```
+
+`bun run build` regenerates all host-specific `SKILL.md` files and compiles the
+browser/design binaries. `bun run test` runs the fast unit and integration
+suite and regenerates host skill fixtures as part of its checks.
+
+## Repo Layout
+
+```text
+workflows/           Smithers workflow definitions
+prompts/             MDX prompt modules rendered by workflow tasks
+lib/smithers/        shared typed helpers for shell, config, preamble, outputs
+agents.ts            shared Smithers agent provider roster
+smithers.config.ts   repo command metadata
+browse/              Playwright browser CLI and tests
+design/              design workflow CLI and tests
+*/SKILL.md.tmpl      upstream-compatible generated skill templates
+```
+
+## Upstream And License
+
+This fork is based on [garrytan/gstack](https://github.com/garrytan/gstack) by
+Garry Tan and keeps the same MIT license. The Smithers workflow layer is here
+to demonstrate that the same AI-engineering tool can be easier to inspect,
+resume, test, and extend when the agent work is expressed as typed durable
+orchestration.
