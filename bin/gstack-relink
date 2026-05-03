@@ -13,6 +13,21 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 GSTACK_CONFIG="${SCRIPT_DIR}/gstack-config"
 
+exec_path() {
+  local cmd="$1"
+  shift
+  local first
+  first=$(head -n 1 "$cmd" 2>/dev/null || echo "")
+  case "$first" in
+    '#!'*'/bash'*|'#!'*'/sh'*)
+      /bin/bash "$cmd" "$@"
+      ;;
+    *)
+      "$cmd" "$@"
+      ;;
+  esac
+}
+
 # Detect install dir
 INSTALL_DIR="${GSTACK_INSTALL_DIR:-}"
 if [ -z "$INSTALL_DIR" ]; then
@@ -34,7 +49,7 @@ SKILLS_DIR="${GSTACK_SKILLS_DIR:-$(dirname "$INSTALL_DIR")}"
 [ -d "$SKILLS_DIR" ] || mkdir -p "$SKILLS_DIR"
 
 # Read prefix setting
-PREFIX=$("$GSTACK_CONFIG" get skill_prefix 2>/dev/null || echo "false")
+PREFIX=$(exec_path "$GSTACK_CONFIG" get skill_prefix 2>/dev/null || echo "false")
 
 # Helper: remove old skill entry (symlink or real directory with symlinked SKILL.md)
 _cleanup_skill_entry() {
@@ -81,7 +96,7 @@ for skill_dir in "$INSTALL_DIR"/*/; do
 done
 
 # Patch SKILL.md name: fields to match prefix setting
-"$INSTALL_DIR/bin/gstack-patch-names" "$INSTALL_DIR" "$PREFIX"
+exec_path "$INSTALL_DIR/bin/gstack-patch-names" "$INSTALL_DIR" "$PREFIX"
 
 if [ "$PREFIX" = "true" ]; then
   echo "Relinked $SKILL_COUNT skills as gstack-*"

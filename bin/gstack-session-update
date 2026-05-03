@@ -21,13 +21,28 @@ log_entry() {
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $1" >> "$LOG_FILE" 2>/dev/null || true
 }
 
+exec_path() {
+  local cmd="$1"
+  shift
+  local first
+  first=$(head -n 1 "$cmd" 2>/dev/null || echo "")
+  case "$first" in
+    '#!'*'/bash'*|'#!'*'/sh'*)
+      /bin/bash "$cmd" "$@"
+      ;;
+    *)
+      "$cmd" "$@"
+      ;;
+  esac
+}
+
 # ── Guard: gstack must be a git repo ──
 if [ ! -d "$GSTACK_DIR/.git" ]; then
   exit 0
 fi
 
 # ── Guard: team mode must be enabled ──
-AUTO=$("$GSTACK_DIR/bin/gstack-config" get auto_upgrade 2>/dev/null || true)
+AUTO=$(exec_path "$GSTACK_DIR/bin/gstack-config" get auto_upgrade 2>/dev/null || true)
 if [ "$AUTO" != "true" ]; then
   exit 0
 fi
@@ -111,6 +126,6 @@ fi
   else
     log_entry "UP_TO_DATE head=$OLD_HEAD"
   fi
-) &
+) >/dev/null 2>&1 &
 
 exit 0

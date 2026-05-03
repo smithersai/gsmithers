@@ -35,13 +35,33 @@ _gstack_codex_auth_probe() {
 
 # --- Version check ----------------------------------------------------------
 
+_gstack_codex_exec_path() {
+  # Execute a resolved tool path. Some test and package-manager shims are
+  # shell scripts; invoking them through the declared shell avoids shebang
+  # execution hangs seen in non-interactive agent sandboxes.
+  local _cmd="$1"
+  shift
+  local _first
+  _first=$(head -n 1 "$_cmd" 2>/dev/null || echo "")
+  case "$_first" in
+    '#!'*'/bash'*|'#!'*'/sh'*)
+      /bin/bash "$_cmd" "$@"
+      ;;
+    *)
+      "$_cmd" "$@"
+      ;;
+  esac
+}
+
 _gstack_codex_version_check() {
   # Warn on known-bad Codex CLI versions. Anchored regex prevents false
   # positives like 0.120.10 or 0.120.20 from matching. 0.120.2-beta still
   # matches the bad release and gets warned (it IS buggy).
   # Update this list when a new Codex CLI version regresses.
-  local _ver
-  _ver=$(codex --version 2>/dev/null | head -1)
+  local _ver _codex_bin
+  _codex_bin=$(command -v codex 2>/dev/null || echo "")
+  [ -z "$_codex_bin" ] && return 0
+  _ver=$(_gstack_codex_timeout_wrapper 2 _gstack_codex_exec_path "$_codex_bin" --version 2>/dev/null | head -1)
   [ -z "$_ver" ] && return 0
   if echo "$_ver" | grep -Eq '(^|[^0-9.])0\.120\.(0|1|2)([^0-9.]|$)'; then
     echo "WARN: Codex CLI $_ver has known stdin deadlock bugs. Run: npm install -g @openai/codex@latest"
@@ -60,9 +80,21 @@ _gstack_codex_timeout_wrapper() {
   local _to
   _to=$(command -v gtimeout 2>/dev/null || command -v timeout 2>/dev/null || echo "")
   if [ -n "$_to" ]; then
-    "$_to" "$_duration" "$@"
+    _gstack_codex_exec_path "$_to" "$_duration" "$@"
   else
-    "$@"
+    "$@" &
+    local _pid=$!
+    local _elapsed=0
+    while kill -0 "$_pid" 2>/dev/null; do
+      if [ "$_elapsed" -ge "$_duration" ]; then
+        kill "$_pid" 2>/dev/null || true
+        wait "$_pid" 2>/dev/null || true
+        return 124
+      fi
+      sleep 1
+      _elapsed=$(( _elapsed + 1 ))
+    done
+    wait "$_pid"
   fi
 }
 

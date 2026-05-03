@@ -43,18 +43,17 @@ function setupMockInstall(skills: string[]): void {
   fs.mkdirSync(installDir, { recursive: true });
   fs.mkdirSync(skillsDir, { recursive: true });
 
-  // Copy the real gstack-config and gstack-relink to the mock install
+  // Link the real bin scripts into the mock install. Copying executable shell
+  // scripts into macOS temp dirs can hang before script code runs in some
+  // non-interactive sandboxes, while symlinks match the real install shape.
   const mockBin = path.join(installDir, 'bin');
   fs.mkdirSync(mockBin, { recursive: true });
-  fs.copyFileSync(path.join(BIN, 'gstack-config'), path.join(mockBin, 'gstack-config'));
-  fs.chmodSync(path.join(mockBin, 'gstack-config'), 0o755);
+  fs.symlinkSync(path.join(BIN, 'gstack-config'), path.join(mockBin, 'gstack-config'));
   if (fs.existsSync(path.join(BIN, 'gstack-relink'))) {
-    fs.copyFileSync(path.join(BIN, 'gstack-relink'), path.join(mockBin, 'gstack-relink'));
-    fs.chmodSync(path.join(mockBin, 'gstack-relink'), 0o755);
+    fs.symlinkSync(path.join(BIN, 'gstack-relink'), path.join(mockBin, 'gstack-relink'));
   }
   if (fs.existsSync(path.join(BIN, 'gstack-patch-names'))) {
-    fs.copyFileSync(path.join(BIN, 'gstack-patch-names'), path.join(mockBin, 'gstack-patch-names'));
-    fs.chmodSync(path.join(mockBin, 'gstack-patch-names'), 0o755);
+    fs.symlinkSync(path.join(BIN, 'gstack-patch-names'), path.join(mockBin, 'gstack-patch-names'));
   }
 
   // Create mock skill directories with proper frontmatter
