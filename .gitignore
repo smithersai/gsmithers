@@ -30,7 +30,8 @@ extension/.auth.json
 supabase/.temp/
 
 # Smithers workflow run artifacts
-executions/
+executions/*
+!executions/.gitkeep
 
 # Throughput analysis — local-only, regenerate via scripts/garry-output-comparison.ts
 docs/throughput-*.json
