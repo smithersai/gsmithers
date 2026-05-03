@@ -11,7 +11,7 @@ import {
   gatherPreambleContext,
   preambleContextSchema,
 } from "../lib/smithers/preamble";
-import { readOutput, readOutputMaybe } from "../lib/smithers/ctx";
+import { readOutputMaybe } from "../lib/smithers/ctx";
 
 const inputSchema = z.object({
   brief: z.string(),
@@ -116,6 +116,8 @@ export default smithers((ctx) => (
     <Task
       id="compare"
       output={outputs.compare}
+      needs={{ preamble: "preamble" }}
+      deps={{ preamble: preambleContextSchema }}
       // dependsOn (not needs/deps) so compare runs even when some variants
       // failed via `continueOnFail`. Missing variants are filtered out.
       dependsOn={[
@@ -128,8 +130,7 @@ export default smithers((ctx) => (
       agent={agents.smart}
       timeoutMs={300_000}
     >
-      {() => {
-        const preamble = readOutput(ctx, preambleContextSchema, "preamble");
+      {(deps) => {
         const variants = (
           [
             readOutputMaybe(ctx, boldVariantSchema, "variant:bold"),
@@ -140,7 +141,7 @@ export default smithers((ctx) => (
         ).filter((v): v is NonNullable<typeof v> => v !== undefined);
         return (
           <>
-            <PreamblePrompt {...preamble} />
+            <PreamblePrompt {...deps.preamble} />
             <DesignShotgunComparePrompt variants={variants} />
           </>
         );

@@ -6,11 +6,16 @@
 // expect. The schema at runtime is fine — this helper keeps the call sites
 // clean and types correct without scattering `as z.infer<...>` casts.
 import type { z } from "zod";
-import type { SmithersCtx } from "smithers-orchestrator";
+
+type OutputReadableCtx = {
+  output: (schema: any, key: { nodeId: string }) => unknown;
+  outputMaybe: (schema: any, key: { nodeId: string }) => unknown;
+  latest: (schema: any, nodeId: string) => unknown;
+};
 
 /** Read a completed task's typed output. Throws if the output isn't present. */
 export function readOutput<T extends z.ZodTypeAny>(
-  ctx: SmithersCtx,
+  ctx: OutputReadableCtx,
   schema: T,
   nodeId: string,
 ): z.infer<T> {
@@ -21,7 +26,7 @@ export function readOutput<T extends z.ZodTypeAny>(
 
 /** Read a completed task's typed output, or undefined if missing / failed. */
 export function readOutputMaybe<T extends z.ZodTypeAny>(
-  ctx: SmithersCtx,
+  ctx: OutputReadableCtx,
   schema: T,
   nodeId: string,
 ): z.infer<T> | undefined {
@@ -32,7 +37,7 @@ export function readOutputMaybe<T extends z.ZodTypeAny>(
 
 /** Read a loop task's most recent iteration output. */
 export function readLatest<T extends z.ZodTypeAny>(
-  ctx: SmithersCtx,
+  ctx: OutputReadableCtx,
   schema: T,
   nodeId: string,
 ): z.infer<T> | undefined {

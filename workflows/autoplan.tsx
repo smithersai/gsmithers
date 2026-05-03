@@ -15,7 +15,7 @@ import {
   gatherPreambleContext,
   preambleContextSchema,
 } from "../lib/smithers/preamble";
-import { readOutput, readOutputMaybe } from "../lib/smithers/ctx";
+import { readOutputMaybe } from "../lib/smithers/ctx";
 import { reviewOutputSchema } from "../lib/smithers/review";
 
 const inputSchema = z
@@ -193,6 +193,8 @@ export default smithers((ctx) => (
     <Task
       id="decision"
       output={outputs.decision}
+      needs={{ preamble: "preamble", plan: "plan" }}
+      deps={{ preamble: preambleContextSchema, plan: loadedPlanSchema }}
       // dependsOn (not needs/deps) so synthesis runs even when some reviewers
       // `continueOnFail`. We read each review via `outputMaybe` and surface
       // missing reviewers to the prompt explicitly.
@@ -200,18 +202,16 @@ export default smithers((ctx) => (
       agent={agents.smart}
       timeoutMs={600_000}
     >
-      {() => {
-        const preamble = readOutput(ctx, preambleContextSchema, "preamble");
-        const plan = readOutput(ctx, loadedPlanSchema, "plan");
+      {(deps) => {
         const ceo = readOutputMaybe(ctx, ceoReviewSchema, "ceo");
         const eng = readOutputMaybe(ctx, engReviewSchema, "eng");
         const design = readOutputMaybe(ctx, designReviewSchema, "design");
         const devex = readOutputMaybe(ctx, devexReviewSchema, "devex");
         return (
           <>
-            <PreamblePrompt {...preamble} />
+            <PreamblePrompt {...deps.preamble} />
             <AutoplanSynthesizePrompt
-              planSource={plan.source}
+              planSource={deps.plan.source}
               ceo={ceo}
               eng={eng}
               design={design}

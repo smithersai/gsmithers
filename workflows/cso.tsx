@@ -13,7 +13,7 @@ import {
   preambleContextSchema,
   detectBaseBranch,
 } from "../lib/smithers/preamble";
-import { readOutput, readOutputMaybe } from "../lib/smithers/ctx";
+import { readOutputMaybe } from "../lib/smithers/ctx";
 import { reviewOutputSchema } from "../lib/smithers/review";
 import { sh } from "../lib/smithers/shell";
 
@@ -136,6 +136,8 @@ export default smithers((ctx) => (
     <Task
       id="report"
       output={outputs.report}
+      needs={{ preamble: "preamble" }}
+      deps={{ preamble: preambleContextSchema }}
       // dependsOn (not needs/deps) so merge runs even when one pass fails
       // via `continueOnFail`. We read each audit with `outputMaybe` and let
       // the prompt flag missing passes.
@@ -143,13 +145,12 @@ export default smithers((ctx) => (
       agent={agents.smart}
       timeoutMs={600_000}
     >
-      {() => {
-        const preamble = readOutput(ctx, preambleContextSchema, "preamble");
+      {(deps) => {
         const owasp = readOutputMaybe(ctx, owaspReviewSchema, "owasp");
         const stride = readOutputMaybe(ctx, strideReviewSchema, "stride");
         return (
           <>
-            <PreamblePrompt {...preamble} />
+            <PreamblePrompt {...deps.preamble} />
             <CsoSynthesizePrompt owasp={owasp} stride={stride} />
           </>
         );
