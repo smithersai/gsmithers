@@ -1,7 +1,7 @@
 // Ported from https://github.com/garrytan/gstack/blob/main/design-consultation/SKILL.md.tmpl
 // See workflows/README.md for the full port changelog.
-/** @jsxImportSource smithers-orchestrator */
-import { createSmithers } from "smithers-orchestrator";
+/** @jsxImportSource smthrs */
+import { createSmithers } from "smthrs";
 import { z } from "zod/v4";
 import { agents } from "../agents";
 import PreamblePrompt from "../prompts/preamble.mdx";

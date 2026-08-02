@@ -11,8 +11,8 @@
 // We lose smithers' native `<WaitForEvent/>` showcase for this workflow —
 // that primitive would be fine if sessions persisted on disk, but they
 // don't. Trade-off recorded in workflows/README.md.
-/** @jsxImportSource smithers-orchestrator */
-import { createSmithers } from "smithers-orchestrator";
+/** @jsxImportSource smthrs */
+import { createSmithers } from "smthrs";
 import { z } from "zod/v4";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";

@@ -12,7 +12,7 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { bashTool, getToolContext } from "smithers-orchestrator/tools";
+import { bashTool, getToolContext } from "smthrs/tools";
 
 export type ShellOptions = {
   /** When true, non-zero exit returns output instead of throwing. */

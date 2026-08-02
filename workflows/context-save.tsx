@@ -1,7 +1,7 @@
 // Ported from https://github.com/garrytan/gstack/blob/main/context-save/SKILL.md.tmpl
 // See workflows/README.md for the full port changelog.
-/** @jsxImportSource smithers-orchestrator */
-import { createSmithers } from "smithers-orchestrator";
+/** @jsxImportSource smthrs */
+import { createSmithers } from "smthrs";
 import { z } from "zod/v4";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
