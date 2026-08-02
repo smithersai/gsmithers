@@ -5,8 +5,8 @@
 // script that gains smithers observability and resume-from-last-success
 // without needing any agent Task for the mechanical work. Demo-value: shows
 // that smithers is useful for orchestration even without LLMs in the loop.
-/** @jsxImportSource smithers-orchestrator */
-import { createSmithers } from "smithers-orchestrator";
+/** @jsxImportSource smthrs */
+import { createSmithers } from "smthrs";
 import { z } from "zod/v4";
 import { mkdir, readdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";

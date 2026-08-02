@@ -1,7 +1,7 @@
 // Shared agent providers for every gstack workflow.
 //
-// smithers-orchestrator ships two copies of its `AgentLike` type under the
-// same flat node_modules layout (root package + @smithers-orchestrator/*
+// smthrs ships two copies of its `AgentLike` type under the
+// same flat node_modules layout (root package + @smthrs/*
 // sub-packages). TypeScript sees them as distinct nominal types, so the
 // concrete agent classes from the root package don't unify with the AgentLike
 // the scheduler expects. We cast at this boundary so downstream workflows
@@ -14,7 +14,7 @@ import {
   KimiAgent,
   PiAgent,
   type AgentLike,
-} from "smithers-orchestrator";
+} from "smthrs";
 
 const rawProviders = {
   claude: new ClaudeCodeAgent({ model: "claude-opus-4-6" }),

@@ -3,8 +3,8 @@
 //
 // Showcases smithers' Approval / needsApproval primitive for one-time-setup
 // workflows: detect → confirm-with-user → persist.
-/** @jsxImportSource smithers-orchestrator */
-import { createSmithers } from "smithers-orchestrator";
+/** @jsxImportSource smthrs */
+import { createSmithers } from "smthrs";
 import { z } from "zod/v4";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";

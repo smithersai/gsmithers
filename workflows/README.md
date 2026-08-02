@@ -22,7 +22,7 @@ bun run workflow:list
 ```
 
 Use the pinned local CLI at `./node_modules/.bin/smithers`. These workflows are
-tested against the repo-pinned `smithers-orchestrator` version and the local
+tested against the repo-pinned `smthrs` version and the local
 MDX/SQLite dependencies installed by Bun.
 
 `--allow-network` is required for workflows that call `git`, `gh`, `glab`,
